@@ -1,13 +1,22 @@
+# dependencies
 node_modules
+
+# builds
 .next
 out
 build
-.DS_Store
+next-env.d.ts
+*.tsbuildinfo
+
+# local env and secrets
+.env*.local
 *.pem
+
+# vercel CLI link
+.vercel
+
+# os / tooling noise
+.DS_Store
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.env*.local
-.vercel
-*.tsbuildinfo
-next-env.d.ts
