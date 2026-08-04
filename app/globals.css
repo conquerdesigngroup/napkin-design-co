@@ -560,12 +560,18 @@ footer{border-top:1px solid var(--hairline);padding-block:3.2rem 2.2rem}
 /* ============================================================
    SIGNATURE - "Sketch it."
    ============================================================ */
+/* A canvas is a replaced element: with width:auto its used size is the intrinsic
+   size (the width and height attributes), so inset:0 alone never stretches it.
+   The explicit 100% resolves against the fixed-position containing block, which is
+   the viewport minus any classic scrollbar, so getBoundingClientRect stays honest. */
 #sketch-canvas{
-  position:fixed;inset:0;z-index:90;pointer-events:none;
+  position:fixed;inset:0;width:100%;height:100%;display:block;z-index:90;pointer-events:none;
 }
-body.sketching #sketch-canvas{pointer-events:auto;cursor:crosshair;touch-action:none}
+/* While sketching, lift the surface above the header (100) and the grain (120) so
+   "draw anywhere" is true. The controls sit above it so there is always a way out. */
+body.sketching #sketch-canvas{pointer-events:auto;cursor:crosshair;touch-action:none;z-index:130}
 .sketch-fab{
-  position:fixed;right:1.1rem;bottom:1.1rem;z-index:110;
+  position:fixed;right:1.1rem;bottom:1.1rem;z-index:140;
   display:flex;align-items:center;gap:.5rem;
 }
 .sketch-fab button{
@@ -582,7 +588,7 @@ body.sketching #sketch-toggle{background:linear-gradient(160deg,rgba(43,77,224,.
 #sketch-clear{display:none}
 body.has-sketch #sketch-clear{display:flex}
 .sketch-hint{
-  position:fixed;right:1.1rem;bottom:4.6rem;z-index:110;color:var(--smoke);text-align:right;
+  position:fixed;right:1.1rem;bottom:4.6rem;z-index:140;color:var(--smoke);text-align:right;
   opacity:0;transform:translateY(6px);transition:opacity .4s var(--ease-ui),transform .4s var(--ease-ui);
   pointer-events:none;max-width:230px;line-height:1.7;
 }
@@ -591,7 +597,8 @@ body.sketching .sketch-hint{opacity:1;transform:none}
 /* ============================================================
    CURSOR - behaves like a pen (fine pointers only)
    ============================================================ */
-#trail{position:fixed;inset:0;z-index:150;pointer-events:none}
+/* Same replaced-element rule as #sketch-canvas: the explicit 100% is what sizes it. */
+#trail{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:150;pointer-events:none}
 #cursor{
   position:fixed;left:0;top:0;z-index:151;pointer-events:none;
   width:7px;height:7px;border-radius:50%;background:var(--ballpoint-lite);

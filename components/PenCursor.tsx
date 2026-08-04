@@ -36,17 +36,27 @@ export default function PenCursor() {
     html.classList.add('pen');
 
     let pts: { x: number; y: number; t: number }[] = [];
-    const dpr = Math.min(devicePixelRatio || 1, 2);
     let raf = false;
+    let trailRaf = 0;
     let tvw = 0;
     let tvh = 0;
 
     const size = () => {
       const r = tc.getBoundingClientRect();
+      // The trail is display:none while sketching. Writing a zero sized backing
+      // store there would kill it permanently, so keep the last good size.
+      if (r.width < 1 || r.height < 1) return;
+      // Re-read: browser zoom and a move to another display both change this.
+      const dpr = Math.min(devicePixelRatio || 1, 2);
+      const w = Math.round(r.width * dpr);
+      const h = Math.round(r.height * dpr);
       tvw = r.width;
       tvh = r.height;
-      tc.width = Math.round(tvw * dpr);
-      tc.height = Math.round(tvh * dpr);
+      // Assigning width or height resets the bitmap, so only write on a change.
+      if (tc.width !== w || tc.height !== h) {
+        tc.width = w;
+        tc.height = h;
+      }
       tctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       tctx.lineCap = 'round';
       tctx.lineJoin = 'round';
@@ -66,8 +76,9 @@ export default function PenCursor() {
         tctx.lineTo(pts[i].x, pts[i].y);
         tctx.stroke();
       }
-      if (pts.length > 1) requestAnimationFrame(drawTrail);
+      if (pts.length > 1) trailRaf = requestAnimationFrame(drawTrail);
       else {
+        trailRaf = 0;
         raf = false;
         tctx.clearRect(0, 0, tvw, tvh);
       }
@@ -79,20 +90,30 @@ export default function PenCursor() {
       pts.push({ x: e.clientX, y: e.clientY, t: performance.now() });
       if (!raf) {
         raf = true;
-        requestAnimationFrame(drawTrail);
+        trailRaf = requestAnimationFrame(drawTrail);
       }
     };
     const over = (e: MouseEvent) => {
       cur.classList.toggle('hot', !!(e.target as Element)?.closest?.('a,button,summary'));
     };
 
-    addEventListener('resize', size);
+    // Observe the element, not the window: CSS owns the box now, so writing the
+    // width attribute cannot feed back into layout and re-trigger this.
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(size) : null;
+    ro?.observe(tc);
+    if (!ro) addEventListener('resize', size);
+    visualViewport?.addEventListener('resize', size);
+    doc.addEventListener('visibilitychange', size);
     addEventListener('pointermove', move, { passive: true });
     doc.addEventListener('mouseover', over);
 
     return () => {
+      cancelAnimationFrame(trailRaf);
       html.classList.remove('pen');
+      ro?.disconnect();
       removeEventListener('resize', size);
+      visualViewport?.removeEventListener('resize', size);
+      doc.removeEventListener('visibilitychange', size);
       removeEventListener('pointermove', move);
       doc.removeEventListener('mouseover', over);
     };
