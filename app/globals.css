@@ -1,0 +1,670 @@
+/* ============================================================
+   NAPKIN DESIGN CO. - hand-coded, no page builders.
+   Concept: everything moves napkin → glass.
+   ============================================================ */
+
+:root{
+  --ink-void:#0A0A0B;
+  --ink-soft:#121214;
+  --napkin:#F2EFE6;
+  --napkin-dim:#E7E3D6;
+  --ballpoint:#2B4DE0;
+  --ballpoint-lite:#7A93FF;
+  --bleed:#FF4A24;
+  --smoke:#8A8A94;
+  --smoke-dim:#5A5A62;
+  --glass-tint:rgba(255,255,255,0.06);
+  --hairline:rgba(242,239,230,0.14);
+
+  --font-display:var(--font-archivo),system-ui,-apple-system,sans-serif;
+  --font-body:var(--font-archivo),system-ui,-apple-system,sans-serif;
+  --font-mono:var(--font-jetbrains),ui-monospace,"SF Mono",Menlo,monospace;
+
+  --ease-reveal:cubic-bezier(0.65,0.05,0,1);
+  --ease-ui:cubic-bezier(0.22,1,0.36,1);
+
+  --gutter:clamp(1.25rem,4vw,4rem);
+  --section:clamp(5.5rem,12vh,10rem);
+  --maxw:1440px;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+html.locked{overflow:hidden}
+body{
+  background:var(--ink-void);
+  color:var(--napkin);
+  font-family:var(--font-body);
+  font-size:1.05rem;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:clip;
+}
+::selection{background:var(--ballpoint);color:var(--napkin)}
+img{display:block;max-width:100%}
+a{color:inherit}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+/* type roles */
+.display{
+  font-family:var(--font-display);
+  font-variation-settings:"wdth" 122;
+  font-weight:800;
+  letter-spacing:-0.03em;
+  line-height:0.9;
+  text-transform:uppercase;
+}
+.mono{
+  font-family:var(--font-mono);
+  font-size:0.72rem;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  font-weight:500;
+}
+.body-copy{max-width:62ch;color:var(--napkin-dim)}
+.muted{color:var(--smoke)}
+
+/* focus - the custom cursor never replaces this */
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--ballpoint-lite);outline-offset:3px;border-radius:2px}
+
+.skip-link{
+  position:fixed;top:-100px;left:var(--gutter);z-index:300;
+  background:var(--napkin);color:var(--ink-void);
+  padding:.7rem 1.1rem;border-radius:.4rem;
+  font-family:var(--font-mono);font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;
+  transition:top .2s var(--ease-ui);
+}
+.skip-link:focus-visible{top:1rem;outline-color:var(--ink-void)}
+
+.visually-hidden{
+  position:absolute!important;width:1px;height:1px;overflow:hidden;
+  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;
+}
+
+/* ---------- backdrop: something worth refracting ---------- */
+.mesh{position:fixed;inset:-20%;z-index:-2;pointer-events:none;overflow:hidden;background:var(--ink-void)}
+.mesh i{position:absolute;border-radius:50%;filter:blur(110px);opacity:.5;will-change:transform}
+.mesh i:nth-child(1){width:52vw;height:52vw;left:-12%;top:-8%;background:radial-gradient(circle,#1B2E86 0%,transparent 62%);animation:drift1 47s ease-in-out infinite alternate}
+.mesh i:nth-child(2){width:44vw;height:44vw;right:-10%;top:22%;background:radial-gradient(circle,#241a4d 0%,transparent 60%);animation:drift2 59s ease-in-out infinite alternate}
+.mesh i:nth-child(3){width:30vw;height:30vw;left:34%;bottom:-14%;background:radial-gradient(circle,rgba(255,74,36,.34) 0%,transparent 60%);animation:drift3 53s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:translate(9vw,7vh) scale(1.12)}}
+@keyframes drift2{to{transform:translate(-8vw,10vh) scale(.94)}}
+@keyframes drift3{to{transform:translate(-6vw,-8vh) scale(1.18)}}
+
+.grain{position:fixed;inset:0;z-index:120;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- liquid glass, built in three layers ---------- */
+.glass{
+  position:relative;
+  background:linear-gradient(160deg,rgba(255,255,255,0.10),var(--glass-tint) 42%,rgba(255,255,255,0.02));
+  -webkit-backdrop-filter:blur(14px) saturate(1.8);
+  backdrop-filter:blur(14px) saturate(1.8);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.4),0 24px 60px -24px rgba(0,0,0,.7);
+  border-radius:1.1rem;
+}
+.glass::before{ /* layer 2 - edge specularity: 1px gradient border */
+  content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,.08) 55%,rgba(255,255,255,.16));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+}
+/* layer 1 - refraction. Chromium gets feDisplacement via backdrop-filter:url();
+   Safari/Firefox keep the blur+saturate+edge fallback above (JS gates .refract). */
+html.can-refract .glass.refract{
+  -webkit-backdrop-filter:url(#glass-refract) blur(6px) saturate(1.8);
+  backdrop-filter:url(#glass-refract) blur(6px) saturate(1.8);
+}
+.sheen{position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none}
+.sheen::after{
+  content:"";position:absolute;top:-30%;bottom:-30%;left:-70%;width:45%;
+  background:linear-gradient(105deg,transparent,rgba(255,255,255,.16) 45%,rgba(255,255,255,.34) 50%,rgba(255,255,255,.16) 55%,transparent);
+  transform:skewX(-18deg);transition:left 1.1s var(--ease-reveal);
+}
+.glass:hover .sheen::after,.glass.shine .sheen::after{left:140%}
+
+/* ---------- shared section scaffolding ---------- */
+.wrap{max-width:var(--maxw);margin-inline:auto;padding-inline:var(--gutter)}
+section{padding-block:var(--section)}
+.eyebrow{display:flex;align-items:center;gap:.9rem;color:var(--smoke);margin-bottom:1.6rem}
+.eyebrow::before{content:"";width:2.2rem;height:1px;background:var(--ballpoint)}
+.section-head{font-size:clamp(2rem,4.6vw,4.2rem);margin-bottom:clamp(2rem,5vh,3.5rem);max-width:22ch}
+
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .7s var(--ease-reveal),transform .7s var(--ease-reveal)}
+.reveal.in{opacity:1;transform:none}
+.reveal.d1{transition-delay:.06s}.reveal.d2{transition-delay:.12s}.reveal.d3{transition-delay:.18s}
+
+/* ============================================================
+   INTRO - the most important 3.5 seconds
+   ============================================================ */
+#intro{
+  position:fixed;inset:0;z-index:200;
+  display:flex;align-items:center;justify-content:center;
+}
+#intro .wipe{position:absolute;left:0;right:0;height:50.5%;background:var(--ink-void);
+  transition:transform .55s var(--ease-reveal)}
+#intro .wipe.t{top:0}
+#intro .wipe.b{bottom:0}
+#intro.b3 .wipe.t{transform:translateY(-101%)}
+#intro.b3 .wipe.b{transform:translateY(101%)}
+#intro.b3 .counter,#intro.b3 .hairline,#intro.b3 .mark{opacity:0;transition:opacity .16s linear}
+#intro .hairline{
+  position:absolute;left:8%;right:8%;top:50%;height:1px;background:var(--smoke);
+  transform:scaleX(0);transform-origin:left center;opacity:.55;
+}
+#intro.b1 .hairline{transform:scaleX(1);transition:transform .9s var(--ease-reveal)}
+#intro .counter{
+  position:absolute;left:8%;top:50%;transform:translateY(-140%);
+  font-family:var(--font-mono);font-size:.72rem;letter-spacing:.14em;color:var(--smoke);
+}
+#intro .counter b{color:var(--napkin);font-weight:500}
+#intro .mark{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,14%);
+  width:clamp(72px,9vw,120px);
+}
+#intro .mark path{
+  fill:var(--napkin);fill-opacity:0;
+  stroke:var(--napkin);stroke-width:2.4;
+  stroke-dasharray:1;stroke-dashoffset:1;
+}
+#intro.b1 .mark path{stroke-dashoffset:0;transition:stroke-dashoffset 1s var(--ease-reveal)}
+#intro.b2 .mark path{fill-opacity:1;stroke-opacity:0;transition:fill-opacity .38s var(--ease-ui),stroke-opacity .38s var(--ease-ui)}
+#intro .mark .gleam{
+  position:absolute;inset:-20%;opacity:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.75) 50%,transparent 70%);
+  transform:translateX(-120%);mix-blend-mode:screen;
+}
+#intro.b2 .mark .gleam{opacity:1;transform:translateX(120%);transition:transform .5s var(--ease-ui) .1s,opacity .1s linear}
+#intro.b3{pointer-events:none}
+#intro.gone{display:none}
+
+/* ============================================================
+   NAV
+   ============================================================ */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;gap:1.5rem;
+  padding:.85rem var(--gutter);
+  border-radius:0;
+  border-bottom:1px solid transparent;
+  transition:opacity .5s var(--ease-ui);
+}
+.nav.glass{box-shadow:inset 0 -1px 0 rgba(255,255,255,.07)}
+.nav.glass::before{display:none}
+.nav .lockup{display:flex;align-items:center;color:var(--napkin);text-decoration:none}
+.nav .lockup svg{height:20px;width:auto;display:block}
+.nav-links{display:flex;gap:1.7rem;list-style:none}
+.nav-links a{
+  text-decoration:none;color:var(--smoke);position:relative;padding-block:.3rem;
+  transition:color .2s var(--ease-ui);
+}
+.nav-links a::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--ballpoint-lite);
+  transform:scaleX(0);transform-origin:left;transition:transform .24s var(--ease-ui);
+}
+.nav-links a:hover{color:var(--napkin)}
+.nav-links a:hover::after{transform:scaleX(1)}
+.nav-right{display:flex;align-items:center;gap:1.4rem}
+.nav-mail{text-decoration:none;color:var(--smoke);transition:color .2s var(--ease-ui)}
+.nav-mail:hover{color:var(--napkin)}
+
+.btn{
+  display:inline-flex;align-items:center;gap:.6rem;
+  font-family:var(--font-mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;font-weight:500;
+  padding:.85rem 1.5rem;border-radius:.7rem;text-decoration:none;
+  transition:transform .2s var(--ease-ui),background-color .2s var(--ease-ui),color .2s var(--ease-ui);
+}
+.btn:active{transform:scale(.97)}
+.btn-glass{color:var(--napkin)}
+.btn-glass:hover{background:linear-gradient(160deg,rgba(255,255,255,.16),rgba(255,255,255,.07))}
+.btn-ink{background:var(--ballpoint);color:#fff}
+.btn-ink:hover{background:#3A5CF0}
+.btn-ghost{color:var(--smoke);padding-inline:.4rem}
+.btn-ghost:hover{color:var(--napkin)}
+.btn .arrow{transition:transform .24s var(--ease-ui)}
+.btn:hover .arrow{transform:translateX(4px)}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero{
+  min-height:100svh;display:flex;flex-direction:column;justify-content:center;
+  padding-top:clamp(5.5rem,12vh,8rem);padding-bottom:0;position:relative;
+}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,.85fr);gap:clamp(2rem,5vw,5rem);align-items:center}
+.hero-copy{min-width:0}
+.hero h1{font-size:clamp(2.7rem,7.4vw,10.5rem)}
+@supports (font-size:1cqi){
+  .hero-copy{container-type:inline-size}
+  .hero h1{font-size:clamp(2.7rem,13.5cqi,10.5rem)}
+}
+.hero h1 .line{display:block;clip-path:inset(0 -9em 0 0);padding-block:.02em}
+.hero h1 .line-in{display:block;white-space:nowrap;transform:translateY(112%);transition:transform .8s var(--ease-reveal)}
+.hero.on h1 .line:nth-child(1) .line-in{transition-delay:0s}
+.hero.on h1 .line:nth-child(2) .line-in{transition-delay:.07s}
+.hero.on h1 .line:nth-child(3) .line-in{transition-delay:.14s}
+.hero.on h1 .line-in{transform:translateY(0)}
+.word-small{
+  font-size:.34em;vertical-align:.13em;letter-spacing:-.01em;position:relative;
+  font-variation-settings:"wdth" 112;font-weight:700;margin-inline:.06em;
+}
+.small-note{
+  position:absolute;left:calc(100% + .18em);top:2%;
+  display:flex;align-items:center;gap:.3em;width:max-content;
+  pointer-events:none;color:var(--ballpoint-lite);
+}
+.small-note .txt{
+  font-family:var(--font-mono);font-size:.3em;letter-spacing:.12em;text-transform:uppercase;
+  white-space:nowrap;font-weight:400;
+}
+.small-note svg{width:1.7em;height:auto;overflow:visible;flex:none}
+.small-note path{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:1;stroke-dashoffset:1}
+.hero.on .small-note path{stroke-dashoffset:0;transition:stroke-dashoffset .9s var(--ease-reveal) 1s}
+.word-huge{font-size:1.12em;font-variation-settings:"wdth" 125;font-weight:900}
+.hero-sub{margin-top:1.8rem;font-size:clamp(1.05rem,1.5vw,1.3rem);max-width:44ch;color:var(--napkin-dim)}
+.hero-cta{display:flex;flex-wrap:wrap;gap:1rem;margin-top:2.2rem}
+.hero-receipt{
+  margin-top:2.6rem;display:inline-flex;align-items:center;gap:.8rem;color:var(--smoke);
+}
+.hero-receipt .dot{width:7px;height:7px;border-radius:50%;background:var(--bleed);
+  box-shadow:0 0 12px rgba(255,74,36,.8);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+.hero-receipt b{color:var(--napkin);font-weight:500}
+
+.hero-sub,.hero-cta,.hero-receipt{opacity:0;transform:translateY(16px);
+  transition:opacity .7s var(--ease-reveal),transform .7s var(--ease-reveal)}
+.hero.on .hero-sub{opacity:1;transform:none;transition-delay:.3s}
+.hero.on .hero-cta{opacity:1;transform:none;transition-delay:.38s}
+.hero.on .hero-receipt{opacity:1;transform:none;transition-delay:.46s}
+
+/* the one glass object */
+.hero-object{position:relative;display:flex;justify-content:center;perspective:1100px;
+  opacity:0;transform:scale(1.06);transition:opacity .9s var(--ease-reveal),transform .9s var(--ease-reveal)}
+.hero.on .hero-object{opacity:1;transform:scale(1);transition-delay:.25s}
+.napkin-card{
+  width:min(340px,72vw);aspect-ratio:1/1.04;border-radius:1.4rem;
+  transform-style:preserve-3d;will-change:transform;
+  animation:float 7s ease-in-out infinite;
+  display:flex;align-items:center;justify-content:center;
+}
+@keyframes float{50%{transform:translateY(-12px) rotate(.6deg)}}
+.napkin-card .doodle{position:absolute;inset:1.1rem;color:rgba(122,147,255,.4);pointer-events:none}
+.napkin-card .doodle svg{width:100%;height:100%}
+.napkin-card .doodle path,.napkin-card .doodle circle{stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round}
+.napkin-card .mark-solid{width:44%;color:var(--napkin);position:relative;z-index:1;
+  filter:drop-shadow(0 10px 24px rgba(0,0,0,.45))}
+.napkin-card .fig{
+  position:absolute;left:50%;top:calc(100% + 1.1rem);transform:translateX(-50%);
+  white-space:nowrap;color:var(--smoke);
+}
+
+/* meta strip - proof bar, mono, along the hero's bottom edge */
+.meta-strip{
+  margin-top:auto;padding-block:1.1rem;padding-right:clamp(4.5rem,11vw,9.5rem);
+  border-top:1px solid var(--hairline);
+  display:flex;flex-wrap:wrap;gap:.6rem 2.4rem;justify-content:space-between;
+  color:var(--smoke);
+  opacity:0;transition:opacity .6s var(--ease-ui) .55s;
+}
+.hero.on .meta-strip{opacity:1}
+.meta-strip span b{color:var(--napkin);font-weight:500}
+.meta-strip .live::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:#43D17C;margin-right:.55em;vertical-align:.06em;animation:pulse 2s ease-in-out infinite}
+
+/* ============================================================
+   RECEIPTS
+   ============================================================ */
+.receipt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem}
+.receipt{padding:1.8rem 1.7rem 1.6rem;display:flex;flex-direction:column;gap:1.1rem;min-height:15rem}
+.receipt .num{
+  font-family:var(--font-display);font-variation-settings:"wdth" 120;font-weight:800;
+  font-size:clamp(2.4rem,3.6vw,3.6rem);letter-spacing:-0.03em;line-height:.95;
+}
+.receipt .num em{font-style:normal;color:var(--ballpoint-lite)}
+.receipt .what{color:var(--napkin-dim);font-size:.95rem;max-width:30ch}
+.receipt .src{margin-top:auto;color:var(--smoke);display:flex;align-items:center;gap:.6rem}
+.receipt .src::before{content:"";width:1rem;height:1px;background:var(--smoke-dim)}
+.receipts-foot{margin-top:1.6rem;color:var(--smoke)}
+
+/* ============================================================
+   WORK - the before/after IS the portfolio
+   ============================================================ */
+.work-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem}
+.tile{
+  position:relative;border-radius:1.1rem;overflow:hidden;aspect-ratio:4/4.6;
+  background:linear-gradient(175deg,var(--ink-soft),#0C0C0E 70%);
+  border:1px solid var(--hairline);
+  display:block;text-align:left;width:100%;
+}
+.tile .final{
+  position:absolute;inset:0;padding:1.6rem;display:flex;flex-direction:column;
+  transition:transform .6s var(--ease-reveal),opacity .6s var(--ease-reveal);
+}
+.tile .final .tags{display:flex;gap:.5rem;color:var(--smoke)}
+.tile .final .tags span{border:1px solid var(--hairline);border-radius:99px;padding:.28rem .7rem}
+.tile .final .big{
+  margin-top:auto;font-family:var(--font-display);text-transform:uppercase;
+  font-variation-settings:"wdth" 122;font-weight:800;letter-spacing:-0.03em;line-height:.92;
+  font-size:clamp(1.6rem,2.5vw,2.5rem);
+}
+.tile .final .stat{color:var(--ballpoint-lite);font-family:var(--font-mono);font-size:.78rem;
+  letter-spacing:.1em;margin-top:.7rem}
+.tile .final .art{position:absolute;inset:0;pointer-events:none;opacity:.9}
+.tile .final .art svg{position:absolute;width:100%;height:100%}
+/* the napkin layer that slides over on hover / tap */
+.tile .napkin-layer{
+  position:absolute;inset:0;background:var(--napkin);color:#141414;
+  padding:1.6rem;display:flex;flex-direction:column;
+  transform:translateY(101%);transition:transform .6s var(--ease-reveal);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
+}
+.tile .napkin-layer .cap{color:#8a877c;display:flex;justify-content:space-between;gap:1rem}
+.tile .napkin-layer .sketch{flex:1;margin-top:.8rem;color:var(--ballpoint)}
+.tile .napkin-layer .sketch svg{width:100%;height:100%}
+.tile .napkin-layer .sketch path,
+.tile .napkin-layer .sketch circle,
+.tile .napkin-layer .sketch rect,
+.tile .napkin-layer .sketch line{
+  stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:1;stroke-dashoffset:1;
+}
+.tile:hover .napkin-layer,.tile.flip .napkin-layer,.tile:focus-visible .napkin-layer{transform:translateY(0)}
+.tile:hover .napkin-layer path,.tile.flip .napkin-layer path,.tile:focus-visible .napkin-layer path,
+.tile:hover .napkin-layer circle,.tile.flip .napkin-layer circle,
+.tile:hover .napkin-layer rect,.tile.flip .napkin-layer rect,
+.tile:hover .napkin-layer line,.tile.flip .napkin-layer line,.tile:focus-visible .napkin-layer line{
+  stroke-dashoffset:0;transition:stroke-dashoffset 1.2s var(--ease-reveal) .18s;
+}
+.tile:hover .final,.tile.flip .final,.tile:focus-visible .final{transform:translateY(-4%);opacity:.25}
+.tile:focus-visible{outline:2px solid var(--ballpoint-lite);outline-offset:3px}
+.work-hint{margin-top:1.2rem;color:var(--smoke);display:none}
+
+/* ============================================================
+   MARQUEE - sketch it. ship it. rank it.
+   ============================================================ */
+.marquee{padding-block:clamp(2rem,5vh,3.5rem);border-block:1px solid var(--hairline);overflow:hidden}
+.marquee .track{display:flex;gap:4rem;width:max-content;animation:slide 36s linear infinite;will-change:transform}
+.marquee span{
+  font-family:var(--font-display);text-transform:uppercase;white-space:nowrap;
+  font-variation-settings:"wdth" 125;font-weight:800;letter-spacing:-0.02em;
+  font-size:clamp(2.6rem,7vw,6.5rem);line-height:1;
+  color:transparent;-webkit-text-stroke:1px rgba(242,239,230,.32);
+}
+.marquee span em{font-style:normal;color:var(--napkin);-webkit-text-stroke:0}
+@keyframes slide{to{transform:translateX(-50%)}}
+
+/* ============================================================
+   SERVICES - six ways off the napkin. scribble → glass, ×6
+   ============================================================ */
+.svc-list{border-top:1px solid var(--hairline)}
+.svc{
+  display:grid;grid-template-columns:4rem minmax(0,1fr) minmax(0,1fr);
+  align-items:center;gap:clamp(1rem,3vw,3rem);
+  padding-block:1.6rem;border-bottom:1px solid var(--hairline);
+  position:relative;
+}
+.svc .idx{color:var(--smoke-dim);font-family:var(--font-mono);font-size:.72rem;letter-spacing:.14em}
+.svc .name-wrap{position:relative}
+.svc .name{
+  font-family:var(--font-display);text-transform:uppercase;
+  font-variation-settings:"wdth" 122;font-weight:800;letter-spacing:-0.03em;line-height:.95;
+  font-size:clamp(1.7rem,3.8vw,3.4rem);
+  color:transparent;-webkit-text-stroke:1px rgba(242,239,230,.5);
+  transition:color .45s var(--ease-ui),-webkit-text-stroke-color .45s var(--ease-ui);
+}
+.svc .core{
+  font-family:var(--font-mono);font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--bleed);border:1px solid rgba(255,74,36,.45);border-radius:99px;
+  padding:.22rem .6rem;vertical-align:.9em;margin-left:.7rem;display:inline-block;
+  -webkit-text-stroke:0;
+}
+.svc .scribble{position:absolute;left:0;right:22%;top:100%;height:12px;color:var(--ballpoint-lite);opacity:.75;
+  transition:opacity .35s var(--ease-ui)}
+.svc .scribble svg{width:100%;height:100%;overflow:visible}
+.svc .scribble path{stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round}
+.svc .plate{
+  justify-self:end;display:flex;align-items:center;gap:1.1rem;
+  padding:.8rem 1.15rem .8rem .9rem;max-width:100%;
+  opacity:0;transform:translateX(26px);
+  transition:opacity .5s var(--ease-reveal),transform .5s var(--ease-reveal);
+}
+.svc .plate img{
+  width:74px;height:74px;object-fit:contain;flex:none;
+  transform:rotate(-8deg) scale(.85);
+  transition:transform .55s var(--ease-reveal) .08s;
+  filter:drop-shadow(0 10px 18px rgba(0,0,0,.5));
+}
+.svc .plate p{font-size:.9rem;color:var(--napkin-dim);max-width:24ch;line-height:1.4}
+.svc:hover .name,.svc.resolved .name{color:var(--napkin);-webkit-text-stroke-color:transparent}
+.svc:hover .scribble,.svc.resolved .scribble{opacity:0}
+.svc:hover .plate,.svc.resolved .plate{opacity:1;transform:none}
+.svc:hover .plate img,.svc.resolved .plate img{transform:rotate(0) scale(1)}
+
+/* ============================================================
+   PROCESS - numbering earned: it's a genuine sequence
+   ============================================================ */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(1.5rem,3vw,3rem)}
+.step{border-top:1px solid var(--hairline);padding-top:1.3rem}
+.step .n{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.14em;color:var(--ballpoint-lite)}
+.step h3{
+  font-family:var(--font-display);text-transform:uppercase;font-variation-settings:"wdth" 120;
+  font-weight:800;letter-spacing:-0.02em;font-size:clamp(1.4rem,2vw,1.9rem);margin:.7rem 0 .6rem;
+}
+.step p{font-size:.93rem;color:var(--smoke)}
+.step .aside{color:var(--napkin-dim);font-size:.93rem}
+
+/* ============================================================
+   GUARANTEE - the napkin as an object
+   ============================================================ */
+.guarantee-band{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(2rem,5vw,5rem);align-items:center}
+.paper{
+  background:var(--napkin);color:#141414;border-radius:1rem;
+  padding:clamp(1.8rem,3.5vw,3rem);
+  transform:rotate(-1.4deg);
+  box-shadow:0 30px 70px -30px rgba(0,0,0,.85),0 2px 0 rgba(255,255,255,.06);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
+  position:relative;
+}
+.paper::after{content:"";position:absolute;inset:.55rem;border:1px dashed rgba(20,20,20,.18);border-radius:.6rem;pointer-events:none}
+.paper h3{
+  font-family:var(--font-display);text-transform:uppercase;font-variation-settings:"wdth" 120;
+  font-weight:800;letter-spacing:-0.02em;line-height:.95;font-size:clamp(1.7rem,2.6vw,2.4rem);
+}
+.paper ul{list-style:none;margin-top:1.2rem;display:grid;gap:.55rem}
+.paper li{display:flex;gap:.7rem;align-items:baseline;font-size:.98rem;color:#33322e}
+.paper li::before{content:"-";color:var(--ballpoint);flex:none}
+.paper .quote{
+  margin-top:1.4rem;color:var(--ballpoint);font-weight:500;font-size:1.02rem;line-height:1.45;
+  border-top:1px solid rgba(20,20,20,.14);padding-top:1.1rem;
+}
+.guarantee-copy .btn{margin-top:1.8rem}
+
+/* ============================================================
+   TEAM
+   ============================================================ */
+.team-line{font-size:clamp(1.05rem,1.4vw,1.25rem);color:var(--napkin-dim);max-width:46ch}
+.partners{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem;margin-top:2.6rem}
+.partner{border-top:1px solid var(--hairline);padding-top:1.2rem}
+.partner .who{
+  font-family:var(--font-display);text-transform:uppercase;font-variation-settings:"wdth" 118;
+  font-weight:800;letter-spacing:-0.02em;font-size:clamp(1.25rem,1.9vw,1.7rem);line-height:1;
+}
+.partner .role{color:var(--ballpoint-lite);margin-top:.5rem}
+.partner p{color:var(--smoke);font-size:.93rem;margin-top:.6rem;max-width:30ch}
+
+/* ============================================================
+   FAQ
+   ============================================================ */
+.faq{max-width:820px}
+.faq details{border-bottom:1px solid var(--hairline)}
+.faq summary{
+  list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:1.5rem;
+  padding-block:1.35rem;font-weight:600;font-size:clamp(1rem,1.4vw,1.2rem);
+}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary .plus{flex:none;width:1rem;height:1rem;position:relative;color:var(--smoke)}
+.faq summary .plus::before,.faq summary .plus::after{
+  content:"";position:absolute;background:currentColor;left:50%;top:50%;transform:translate(-50%,-50%);
+  transition:transform .3s var(--ease-ui);
+}
+.faq summary .plus::before{width:100%;height:1.5px}
+.faq summary .plus::after{width:1.5px;height:100%}
+.faq details[open] summary .plus::after{transform:translate(-50%,-50%) rotate(90deg) scaleY(0)}
+.faq details[open] summary .plus{color:var(--ballpoint-lite)}
+.faq .a{padding-bottom:1.4rem;color:var(--napkin-dim);max-width:60ch}
+
+/* ============================================================
+   CTA - one keycap, one line, nothing else
+   ============================================================ */
+.cta{min-height:82svh;display:flex;align-items:center;position:relative;overflow:clip}
+.cta .inner{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:clamp(2rem,5vw,5rem);align-items:center;width:100%}
+.cta h2{font-size:clamp(2.6rem,7vw,7rem)}
+.cta h2 .pen{color:var(--ballpoint-lite)}
+.cta .sub{margin-top:1.4rem;color:var(--smoke)}
+.keycap-btn{
+  display:block;width:min(320px,64vw);margin-inline:auto;position:relative;
+  transition:transform .12s var(--ease-ui),filter .12s var(--ease-ui);
+  filter:drop-shadow(0 34px 40px rgba(0,0,0,.55));
+  border-radius:2rem;
+}
+.keycap-btn img{width:100%;animation:float 6s ease-in-out infinite}
+.keycap-btn:hover{transform:translateY(-4px)}
+.keycap-btn:active{transform:translateY(7px) scale(.985);filter:drop-shadow(0 8px 12px rgba(0,0,0,.6))}
+.keycap-btn .under{
+  position:absolute;left:50%;top:calc(100% + 1.2rem);transform:translateX(-50%);
+  white-space:nowrap;color:var(--smoke);
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer{border-top:1px solid var(--hairline);padding-block:3.2rem 2.2rem}
+.foot-grid{display:flex;flex-wrap:wrap;gap:2.5rem 4rem;justify-content:space-between;align-items:flex-start}
+.foot-brand{max-width:34ch}
+.foot-brand svg{height:22px;width:auto;color:var(--napkin)}
+.foot-brand p{color:var(--smoke);font-size:.92rem;margin-top:1rem}
+.foot-nav{display:flex;gap:2.5rem}
+.foot-nav ul{list-style:none;display:grid;gap:.6rem}
+.foot-nav .h{color:var(--smoke-dim);margin-bottom:.4rem}
+.foot-nav a{text-decoration:none;color:var(--napkin-dim);font-size:.95rem}
+.foot-nav a:hover{color:var(--napkin)}
+.colophon{
+  margin-top:3rem;padding-top:1.4rem;border-top:1px solid var(--hairline);
+  display:flex;flex-wrap:wrap;gap:.8rem 2.5rem;justify-content:space-between;color:var(--smoke-dim);
+}
+.colophon .tag em{font-style:normal;color:var(--ballpoint-lite)}
+
+/* ============================================================
+   SIGNATURE - "Sketch it."
+   ============================================================ */
+#sketch-canvas{
+  position:fixed;inset:0;z-index:90;pointer-events:none;
+}
+body.sketching #sketch-canvas{pointer-events:auto;cursor:crosshair;touch-action:none}
+.sketch-fab{
+  position:fixed;right:1.1rem;bottom:1.1rem;z-index:110;
+  display:flex;align-items:center;gap:.5rem;
+}
+.sketch-fab button{
+  display:flex;align-items:center;gap:.6rem;
+  padding:.8rem 1.05rem;border-radius:.8rem;color:var(--napkin);
+  font-family:var(--font-mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
+  transition:transform .18s var(--ease-ui);
+}
+.sketch-fab button:hover{transform:translateY(-2px)}
+.sketch-fab button:active{transform:scale(.96)}
+.sketch-fab .pen-ico{width:15px;height:15px;flex:none}
+.sketch-fab .pen-ico path{stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+body.sketching #sketch-toggle{background:linear-gradient(160deg,rgba(43,77,224,.55),rgba(43,77,224,.25));}
+#sketch-clear{display:none}
+body.has-sketch #sketch-clear{display:flex}
+.sketch-hint{
+  position:fixed;right:1.1rem;bottom:4.6rem;z-index:110;color:var(--smoke);text-align:right;
+  opacity:0;transform:translateY(6px);transition:opacity .4s var(--ease-ui),transform .4s var(--ease-ui);
+  pointer-events:none;max-width:230px;line-height:1.7;
+}
+body.sketching .sketch-hint{opacity:1;transform:none}
+
+/* ============================================================
+   CURSOR - behaves like a pen (fine pointers only)
+   ============================================================ */
+#trail{position:fixed;inset:0;z-index:150;pointer-events:none}
+#cursor{
+  position:fixed;left:0;top:0;z-index:151;pointer-events:none;
+  width:7px;height:7px;border-radius:50%;background:var(--ballpoint-lite);
+  transform:translate(-50%,-50%);
+  transition:width .2s var(--ease-ui),height .2s var(--ease-ui),background-color .2s var(--ease-ui);
+  mix-blend-mode:difference;
+}
+#cursor.hot{width:34px;height:34px;background:#fff}
+html.pen, html.pen body, html.pen a, html.pen button, html.pen summary{cursor:none}
+html.pen body.sketching, html.pen body.sketching *{cursor:crosshair}
+
+/* ============================================================
+   RESPONSIVE - a re-choreography, not a reduction
+   ============================================================ */
+@media (max-width:980px){
+  .hero-grid{grid-template-columns:1fr}
+  .hero-object{order:2;margin-top:2.5rem}
+  .napkin-card{width:min(250px,64vw)}
+  .receipt-grid,.work-grid,.partners{grid-template-columns:1fr}
+  .receipt{min-height:0}
+  .steps{grid-template-columns:1fr 1fr}
+  .svc{grid-template-columns:2.6rem minmax(0,1fr)}
+  .svc .plate{grid-column:2;justify-self:start;margin-top:.9rem}
+  .svc .scribble{right:8%}
+  .guarantee-band,.cta .inner{grid-template-columns:1fr}
+  .paper{transform:rotate(-1deg)}
+  .cta{min-height:0}
+  .cta .keycap-wrap{order:2;margin-top:2rem}
+  .nav-links{display:none}
+  .nav-mail{display:none}
+  .tile{aspect-ratio:4/4.2}
+  .work-hint{display:block}
+}
+@media (max-height:780px) and (orientation:landscape) and (min-width:981px){
+  .hero{padding-top:clamp(4.2rem,9svh,6rem)}
+  .hero h1{font-size:clamp(2.1rem,min(13.5cqi,15.5svh),8.2rem)}
+  .napkin-card{width:min(300px,56vw,46svh)}
+  .hero-sub{margin-top:1.1rem}
+  .hero-cta{margin-top:1.4rem}
+  .hero-receipt{margin-top:1.4rem}
+  .meta-strip{padding-block:.8rem}
+}
+@media (max-width:980px) and (orientation:portrait){
+  .hero{justify-content:flex-start}
+  .hero-object{margin-top:3rem}
+}
+@media (max-width:560px){
+  .steps{grid-template-columns:1fr}
+  .meta-strip{gap:.5rem 1.4rem}
+  .svc .plate img{width:60px;height:60px}
+}
+@media (hover:none){
+  .sheen::after{display:none}
+}
+
+/* ============================================================
+   REDUCED MOTION - a real code path
+   ============================================================ */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+  html{scroll-behavior:auto}
+  .marquee .track{animation:none;transform:none}
+  .mesh i{animation:none}
+  #cursor,#trail{display:none}
+  .napkin-card,.keycap-btn img{animation:none}
+}
+
+/* draw-in for the service scribbles + hero doodle (pathLength-normalized) */
+.svc .scribble path{stroke-dasharray:1;stroke-dashoffset:1}
+.svc.in .scribble path{stroke-dashoffset:0;transition:stroke-dashoffset 1.1s var(--ease-reveal) .3s}
+.napkin-card .doodle path,.napkin-card .doodle circle{stroke-dasharray:1;stroke-dashoffset:1}
+.hero.on .napkin-card .doodle path,.hero.on .napkin-card .doodle circle{stroke-dashoffset:0;transition:stroke-dashoffset 1.4s var(--ease-reveal) .55s}
+body.sketching #cursor,body.sketching #trail{display:none}
+.tilt{transform-style:preserve-3d;will-change:transform}
+.no-anim,.no-anim *{transition-duration:0s!important;transition-delay:0s!important}
+#intro .counter b{display:inline-block;min-width:2.1em;text-align:right}
