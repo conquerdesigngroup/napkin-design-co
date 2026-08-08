@@ -260,7 +260,7 @@ section{padding-block:var(--section)}
   color:transparent;
   /* Outline, not fill: the same stroke motif the marquee and the service names
      use, so the ghosts read as unresolved versions of the headline. */
-  -webkit-text-stroke:1px rgba(242,239,230,.3);
+  -webkit-text-stroke:1px rgba(242,239,230,.45);
 }
 /* Same line box as the real headline so the ghosts register as the same words. */
 .hero-echo .echo-line{display:block;white-space:nowrap;padding-block:.02em}

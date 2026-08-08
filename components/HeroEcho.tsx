@@ -23,10 +23,21 @@ const subscribe = (cb: () => void) => {
 const motionOk = () => !matchMedia(REDUCE).matches;
 const serverSnapshot = () => false;
 
-const COPIES = 5;
-const STEP = 0.22; // em of headline size that each ghost trails, at full spread
-const PEAK = 0.5; // fraction of the hero scrolled out when the spread saturates
-const MAX_ALPHA = 0.38; // nearest ghost; the rest ramp down from here
+/* Six ghosts, three above and three below, fanning symmetrically off the real
+   headline. Fewer and wider beats many and tight: each repeat stays legible
+   instead of collapsing into a mesh. */
+const COPIES = 6;
+const HALF = COPIES / 2;
+const STEP = 0.46; // em of headline size between ranks, at full spread
+const MAX_ALPHA = 0.7; // rank 1; ranks ramp down from here
+/* Fraction of the scroll distance to the headline clearing the top of the
+   viewport at which the fan reaches full spread. This has to be under 1: the
+   headline is gone by the time it clears, so peaking there means nobody ever
+   sees full strength. */
+const PEAK = 0.7;
+
+const rankOf = (i: number) => (i % HALF) + 1;
+const dirOf = (i: number) => (i < HALF ? 1 : -1);
 
 export default function HeroEcho() {
   const on = useSyncExternalStore(subscribe, motionOk, serverSnapshot);
@@ -36,8 +47,9 @@ export default function HeroEcho() {
     if (!on) return;
     const layer = root.current;
     if (!layer) return;
+    const headline = layer.parentElement;
     const hero = layer.closest<HTMLElement>('.hero');
-    if (!hero) return;
+    if (!headline || !hero) return;
     const copies = [...layer.querySelectorAll<HTMLElement>('.echo-copy')];
     if (!copies.length) return;
 
@@ -46,15 +58,18 @@ export default function HeroEcho() {
     let last = -1;
 
     const paint = () => {
-      const r = hero.getBoundingClientRect();
-      // 0 while the hero owns the viewport, 1 once it is PEAK of its own height out
-      const p = Math.min(1, Math.max(0, -r.top / Math.max(1, r.height * PEAK)));
+      const r = headline.getBoundingClientRect();
+      // Scroll position at which the headline fully clears the top of the viewport.
+      // Measured off the live rect so it follows the fluid type and any resize.
+      const clearAt = r.top + scrollY + r.height;
+      const p = Math.min(1, Math.max(0, scrollY / Math.max(1, clearAt * PEAK)));
       if (p !== last) {
         last = p;
         for (let i = 0; i < copies.length; i++) {
           const c = copies[i];
-          c.style.transform = `translate3d(0,${(p * (i + 1) * STEP).toFixed(4)}em,0)`;
-          c.style.opacity = (p * MAX_ALPHA * (1 - i / COPIES)).toFixed(3);
+          const rank = rankOf(i);
+          c.style.transform = `translate3d(0,${(p * dirOf(i) * rank * STEP).toFixed(4)}em,0)`;
+          c.style.opacity = (p * MAX_ALPHA * (1 - rank / (HALF + 1))).toFixed(3);
         }
       }
       raf = running ? requestAnimationFrame(paint) : 0;
