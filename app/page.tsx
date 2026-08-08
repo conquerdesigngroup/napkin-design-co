@@ -1,5 +1,7 @@
 import Clock from '@/components/Clock';
 import HeroTilt from '@/components/HeroTilt';
+import HeroEcho from '@/components/HeroEcho';
+import HeadlineLockup from '@/components/HeadlineLockup';
 import { LOGOMARK_VIEWBOX } from '@/components/logo-paths';
 import { MAILTO_NEW_PROJECT, MAILTO_FLAT_QUOTE, MAILTO_LETS_GO } from '@/components/links';
 
@@ -133,30 +135,19 @@ export default function Home() {
       <section className="hero wrap" id="top">
         <div className="hero-grid">
           <div className="hero-copy">
-            <h1 className="display">
-              <span className="line">
-                <span className="line-in">
-                  We make{' '}
-                  <span className="word-small">
-                    small
-                    <span className="small-note" aria-hidden="true">
-                      <svg viewBox="0 0 62 30">
-                        <path pathLength={1} d="M58,22 C44,10 28,7 10,13 M10,13 l9,-6 M10,13 l10,4" />
-                      </svg>
-                      <span className="txt">actual size</span>
+            <div className="headline">
+              <HeroEcho />
+              <h1 className="display">
+                <HeadlineLockup
+                  note
+                  wrap={(line, i) => (
+                    <span className="line" key={i}>
+                      <span className="line-in">{line}</span>
                     </span>
-                  </span>
-                </span>
-              </span>
-              <span className="line">
-                <span className="line-in">business</span>
-              </span>
-              <span className="line">
-                <span className="line-in">
-                  look <span className="word-huge">huge.</span>
-                </span>
-              </span>
-            </h1>
+                  )}
+                />
+              </h1>
+            </div>
             <p className="hero-sub">
               Web design &amp; SEO that takes you from napkin sketch to ranking on Google.
             </p>
