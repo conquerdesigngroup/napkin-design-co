@@ -2,7 +2,6 @@ import Clock from '@/components/Clock';
 import HeroTilt from '@/components/HeroTilt';
 import HeroEcho from '@/components/HeroEcho';
 import HeadlineLockup from '@/components/HeadlineLockup';
-import { LOGOMARK_VIEWBOX } from '@/components/logo-paths';
 import { MAILTO_NEW_PROJECT, MAILTO_FLAT_QUOTE, MAILTO_LETS_GO } from '@/components/links';
 
 const SERVICES = [
@@ -168,27 +167,10 @@ export default function Home() {
 
           <div className="hero-object" aria-hidden="true">
             <div className="tilt">
-              <div className="napkin-card glass refract" id="heroCard">
-                <span className="sheen" />
-                <span className="doodle">
-                  <svg viewBox="0 0 200 210">
-                    <path
-                      pathLength={1}
-                      d="M18,30 C60,24 130,26 182,30 M18,30 C16,80 17,140 19,186 M18,186 C70,190 140,189 182,185 M182,30 C184,84 183,140 182,185"
-                    />
-                    <path
-                      pathLength={1}
-                      d="M34,58 C60,54 90,56 112,58 M34,74 C70,71 110,73 150,74 M34,90 C58,88 78,89 96,90"
-                    />
-                    <circle pathLength={1} cx="152" cy="132" r="24" />
-                    <path pathLength={1} d="M60,150 C80,136 104,130 126,132 M126,132 l-9,-5 M126,132 l-8,6" />
-                    <path pathLength={1} d="M36,166 C56,161 84,163 104,166" />
-                  </svg>
-                </span>
-                <svg className="mark-solid" viewBox={LOGOMARK_VIEWBOX}>
-                  <use href="#logomark" />
-                </svg>
-                <span className="fig mono">the napkin, resolved</span>
+              <div className="hero-keycap">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/keycaps/seo.webp" alt="" width="620" height="611" />
+                <span className="fig mono">the seo key, pressed</span>
               </div>
             </div>
           </div>

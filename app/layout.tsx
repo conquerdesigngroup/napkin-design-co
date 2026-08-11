@@ -43,7 +43,7 @@ const NOSCRIPT_CSS = `
 #nav{opacity:1!important}
 .hero .line-in{transform:none}
 .hero-sub,.hero-cta,.hero-receipt,.hero-object,.meta-strip,.reveal{opacity:1;transform:none}
-.napkin-card .doodle path,.napkin-card .doodle circle,.small-note path,.svc .scribble path{stroke-dashoffset:0}
+.small-note path,.svc .scribble path{stroke-dashoffset:0}
 .svc .plate{opacity:1;transform:none}.svc .plate img{transform:none}
 .svc .name{color:var(--napkin);-webkit-text-stroke-color:transparent}.svc .scribble{opacity:0}
 `;
