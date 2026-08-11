@@ -2,6 +2,7 @@ import Clock from '@/components/Clock';
 import HeroTilt from '@/components/HeroTilt';
 import HeroEcho from '@/components/HeroEcho';
 import HeadlineLockup from '@/components/HeadlineLockup';
+import LogoField from '@/components/LogoField';
 import { MAILTO_NEW_PROJECT, MAILTO_FLAT_QUOTE, MAILTO_LETS_GO } from '@/components/links';
 
 const SERVICES = [
@@ -198,6 +199,7 @@ export default function Home() {
 
       {/* ============ RECEIPTS ============ */}
       <section className="wrap" id="receipts">
+        <LogoField />
         <p className="eyebrow mono reveal">Real receipts</p>
         <h2 className="display section-head reveal">We ran the playbook on ourselves first.</h2>
         <div className="receipt-grid">

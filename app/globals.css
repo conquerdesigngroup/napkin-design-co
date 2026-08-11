@@ -383,6 +383,11 @@ section{padding-block:var(--section)}
 /* ============================================================
    RECEIPTS
    ============================================================ */
+/* The logomark relief sits behind everything in the section. The glass cards
+   keep their backdrop blur, so the metal frosts through them. */
+#receipts{position:relative}
+#receipts .logo-field{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;opacity:.6}
+#receipts > *:not(.logo-field){position:relative;z-index:1}
 .receipt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem}
 .receipt{padding:1.8rem 1.7rem 1.6rem;display:flex;flex-direction:column;gap:1.1rem;min-height:15rem}
 .receipt .num{
