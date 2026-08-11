@@ -9,6 +9,20 @@ import { INTRO_MARK_D } from './logo-paths';
 const SESSION_KEY = 'napkin-intro';
 let played = false; // survives a StrictMode remount, so the sequence never restarts
 
+/* Beat 4, the keycap rain. Deterministic scatter, no randomness: position in
+   viewport units, size in px (CSS scales it down under 700px), a falling and a
+   landed rotation, and the stagger. The SEO cap is largest, lands last, and sits
+   near the zoom origin, since it is the hero's own object. */
+const RAIN = [
+  { src: '/keycaps/cta.webp', left: '7vw', top: '12vh', w: '96px', r0: '-32deg', r1: '-18deg', delay: 0 },
+  { src: '/keycaps/photo.webp', left: '76vw', top: '9vh', w: '104px', r0: '26deg', r1: '13deg', delay: 70 },
+  { src: '/keycaps/brand.webp', left: '14vw', top: '56vh', w: '126px', r0: '-16deg', r1: '-8deg', delay: 140 },
+  { src: '/keycaps/design.webp', left: '36vw', top: '16vh', w: '86px', r0: '38deg', r1: '22deg', delay: 210 },
+  { src: '/keycaps/social.webp', left: '67vw', top: '52vh', w: '110px', r0: '-26deg', r1: '-12deg', delay: 280 },
+  { src: '/keycaps/ai.webp', left: '87vw', top: '30vh', w: '90px', r0: '14deg', r1: '6deg', delay: 350 },
+  { src: '/keycaps/seo.webp', left: '41vw', top: '36vh', w: '158px', r0: '18deg', r1: '5deg', delay: 460 },
+];
+
 export default function Intro() {
   const root = useRef<HTMLDivElement>(null);
   const pct = useRef<HTMLBaseElement>(null);
@@ -62,7 +76,7 @@ export default function Intro() {
       timers.forEach(clearTimeout);
       timers = [];
       html.classList.add('no-anim');
-      intro!.classList.add('b1', 'b2', 'b3', 'gone');
+      intro!.classList.add('b1', 'b2', 'b3', 'b4', 'b5', 'gone');
       hero!.classList.add('on');
       nav!.style.opacity = '1';
       html.classList.remove('locked');
@@ -74,16 +88,39 @@ export default function Intro() {
     function finishSequence() {
       if (done) return;
       later(() => intro!.classList.add('b2'), 0); // outline fills + sheen
-      later(() => intro!.classList.add('b3'), 420 * K); // clip-path wipe
-      later(() => hero!.classList.add('on'), (420 + 250) * K); // hero lines up from behind the mask
+      later(() => intro!.classList.add('b3'), 420 * K); // clip-path wipe opens onto the page
+
+      /* b4: the keycaps rain onto the page. JS owns duration and delay so the
+         mobile K factor compresses the whole choreography coherently; CSS owns
+         the curve and the geometry, same split as the mark draw above. */
+      later(() => {
+        intro!.querySelectorAll<HTMLElement>('.stage img').forEach((c, i) => {
+          c.style.transitionDuration = `${Math.round(620 * K)}ms`;
+          c.style.transitionDelay = `${Math.round(RAIN[i].delay * K)}ms`;
+        });
+        intro!.classList.add('b4');
+      }, 460 * K);
+
+      /* b5: the camera pushes through the caps. Last cap lands at ~1540, the
+         180ms breath before this is deliberate. */
+      later(() => {
+        const stage = intro!.querySelector<HTMLElement>('.stage');
+        if (stage) {
+          stage.style.transitionDuration = `${Math.round(850 * K)}ms, ${Math.round(320 * K)}ms`;
+          stage.style.transitionDelay = `0ms, ${Math.round(400 * K)}ms`;
+        }
+        intro!.classList.add('b5');
+      }, 1720 * K);
+
+      later(() => hero!.classList.add('on'), 1940 * K); // headline rises mid-zoom
       later(() => {
         nav!.style.opacity = '1';
         html.classList.remove('locked');
         done = true;
         remember();
         removeSkip();
-      }, (420 + 250 + 720) * K);
-      later(() => intro!.classList.add('gone'), (420 + 620) * K);
+      }, 2570 * K);
+      later(() => intro!.classList.add('gone'), 2600 * K);
     }
 
     if (reduce || seen) {
@@ -155,6 +192,27 @@ export default function Intro() {
           <path pathLength={1} d={INTRO_MARK_D} />
         </svg>
         <span className="gleam" />
+      </div>
+      {/* b4/b5 stage: eager on purpose, so the honest progress counter above
+          genuinely waits for the caps it is about to drop */}
+      <div className="stage">
+        {RAIN.map((k) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={k.src}
+            src={k.src}
+            alt=""
+            style={
+              {
+                left: k.left,
+                top: k.top,
+                '--w': k.w,
+                '--r0': k.r0,
+                '--r1': k.r1,
+              } as React.CSSProperties
+            }
+          />
+        ))}
       </div>
     </div>
   );

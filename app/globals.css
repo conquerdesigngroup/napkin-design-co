@@ -183,6 +183,33 @@ section{padding-block:var(--section)}
 #intro.b3{pointer-events:none}
 #intro.gone{display:none}
 
+/* beats 4 and 5: keycap rain onto the revealed page, then the camera pushes
+   through them. Curves live here, durations and delays are set from JS scaled
+   by the mobile K factor, the same split the mark draw uses. */
+#intro .stage{
+  position:absolute;inset:0;overflow:hidden;pointer-events:none;
+  opacity:0;transform-origin:47% 45%;will-change:transform,opacity;
+}
+#intro.b4 .stage{opacity:1}
+#intro .stage img{
+  position:absolute;width:var(--w);height:auto;
+  transform:translateY(-130vh) rotate(var(--r0));
+  filter:drop-shadow(0 18px 26px rgba(0,0,0,.5));
+  will-change:transform;
+}
+#intro.b4 .stage img{
+  transform:translateY(0) rotate(var(--r1));
+  /* a fall accelerates, then overshoots about 8 percent and settles */
+  transition:transform 620ms cubic-bezier(.5,.05,.55,1.4);
+}
+#intro.b5 .stage{
+  transform:scale(8.5);opacity:0;
+  transition:transform 850ms var(--ease-reveal),opacity 320ms linear 400ms;
+}
+@media (max-width:700px){
+  #intro .stage img{width:calc(var(--w) * .68)}
+}
+
 /* ============================================================
    NAV
    ============================================================ */
