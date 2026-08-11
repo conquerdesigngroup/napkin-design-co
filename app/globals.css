@@ -194,17 +194,20 @@ section{padding-block:var(--section)}
 #intro .stage img{
   position:absolute;width:var(--w);height:auto;
   transform:translateY(-130vh) rotate(var(--r0));
-  filter:drop-shadow(0 18px 26px rgba(0,0,0,.5));
-  will-change:transform;
+  filter:blur(7px) drop-shadow(0 18px 26px rgba(0,0,0,.5));
+  will-change:transform,filter;
 }
 #intro.b4 .stage img{
   transform:translateY(0) rotate(var(--r1));
-  /* a fall accelerates, then overshoots about 8 percent and settles */
-  transition:transform 620ms cubic-bezier(.5,.05,.55,1.4);
+  filter:blur(0) drop-shadow(0 18px 26px rgba(0,0,0,.5));
+  /* a fall accelerates, glides into a small overshoot, settles softly; the
+     motion blur clears as each cap lands. JS sets duration and delay per cap. */
+  transition:transform 860ms cubic-bezier(.4,0,.22,1.18),filter 860ms cubic-bezier(.4,0,.22,1.18);
 }
 #intro.b5 .stage{
   transform:scale(8.5);opacity:0;
-  transition:transform 850ms var(--ease-reveal),opacity 320ms linear 400ms;
+  /* a camera push wants a true strong in-out, not the reveal curve's snap */
+  transition:transform 1000ms cubic-bezier(.77,0,.175,1),opacity 420ms ease 480ms;
 }
 @media (max-width:700px){
   #intro .stage img{width:calc(var(--w) * .68)}

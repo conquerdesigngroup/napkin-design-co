@@ -171,3 +171,18 @@ jumps straight to the finished state under the existing `.no-anim` guard.
   still finishing, so the handoff overlaps instead of queueing. Then press any
   key mid-rain: the page must be instantly usable with no half-dropped caps.
 - Session-gate check: reload after a completed run, intro must not replay.
+
+## Revision 1, fluidity pass
+
+Feedback: make the rain more fluid, smoother ease in and out. Changes:
+
+- Fall: 620ms flat became per-cap 780 to 940ms (big caps fall longer), curve
+  cubic-bezier(.5,.05,.55,1.4) became cubic-bezier(.4,0,.22,1.18): the ~8
+  percent overshoot dropped to ~4 and the settle is gradual instead of snapped.
+- Motion blur: caps fall with filter blur(7px) clearing to blur(0) on the same
+  curve and duration as the transform, so each cap sharpens as it lands.
+- Zoom: 850ms on --ease-reveal became 1000ms on cubic-bezier(.77,0,.175,1),
+  the strong ease-in-out from the audit playbook: a camera push wants symmetric
+  acceleration, not the reveal curve's mid snap. Cap fade is 420ms ease at 480ms.
+- Beats shifted: b5 at 2040, hero.on at 2290, done 3090, gone 3120 (times x K).
+  The sequence gained ~500ms in exchange for the softer motion.
